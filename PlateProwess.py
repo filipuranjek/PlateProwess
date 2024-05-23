@@ -2,6 +2,9 @@ import numpy as np
 import cv2
 import imutils
 import pytesseract
+import tkinter as tk
+from tkinter import filedialog, Label, Button
+from PIL import Image, ImageTk
 
 def preprocess_image(image_path):
     image = cv2.imread(image_path)
@@ -36,19 +39,37 @@ def ocr_text(image):
     custom_config = r'--oem 3 --psm 7 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
     return pytesseract.image_to_string(image, config=custom_config, lang='hrv').strip()
 
-def main():
-    gray, edged = preprocess_image("./data/car8.jpeg")
+def select_image():
+    file_path = filedialog.askopenfilename()
+    if not file_path:
+        return
+    
+    gray, edged = preprocess_image(file_path)
     plateCnt = find_contours(edged)
     if plateCnt is not None:
         masked_image = mask_number_plate(gray, plateCnt)
         binary_image = convert_to_binary(masked_image)
         text = ocr_text(binary_image)
-        print(text)
-        cv2.imshow("Binary Plate", binary_image)
-        cv2.waitKey(5000)
-        cv2.destroyAllWindows()
-    else:
-        print("No contour detected.")
+        result_label.config(text=f"OCR Result: {text}")
 
-if __name__ == "__main__":
-    main()
+        binary_image = Image.fromarray(binary_image)
+        binary_image = ImageTk.PhotoImage(binary_image)
+        panel.config(image=binary_image)
+        panel.image = binary_image
+    else:
+        result_label.config(text="No contour detected.")
+
+app = tk.Tk()
+app.title("License Plate OCR")
+app.geometry("800x600")
+
+button = Button(app, text="Select Image", command=select_image)
+button.pack()
+
+result_label = Label(app, text="OCR Result:")
+result_label.pack()
+
+panel = Label(app)
+panel.pack()
+
+app.mainloop()
