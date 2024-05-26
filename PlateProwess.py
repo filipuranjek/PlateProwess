@@ -3,7 +3,7 @@ import cv2
 import imutils
 import pytesseract
 import tkinter as tk
-from tkinter import filedialog, Label, Button
+from tkinter import filedialog, Label, Button, Frame, Canvas
 from PIL import Image, ImageTk
 
 def preprocess_image(image_path):
@@ -50,26 +50,46 @@ def select_image():
         masked_image = mask_number_plate(gray, plateCnt)
         binary_image = convert_to_binary(masked_image)
         text = ocr_text(binary_image)
-        result_label.config(text=f"OCR Result: {text}")
+        result_label.config(text=f"OCR Result: {text}", fg='green')
 
         binary_image = Image.fromarray(binary_image)
         binary_image = ImageTk.PhotoImage(binary_image)
         panel.config(image=binary_image)
         panel.image = binary_image
     else:
-        result_label.config(text="No contour detected.")
+        result_label.config(text="No contour detected.", fg='red')
 
 app = tk.Tk()
-app.title("License Plate OCR")
-app.geometry("800x600")
+app.title("PlateProwess")
+app.geometry("900x600")
+app.configure(bg='#333333')
 
-button = Button(app, text="Select Image", command=select_image)
+header_frame = Frame(app, bg='#444444', pady=10)
+header_frame.pack(fill='x')
+
+header_label = Label(header_frame, text="PlateProwess", font=('Arial', 24, 'bold'), bg='#444444', fg='white')
+header_label.pack()
+
+main_frame = Frame(app, bg='#333333', pady=20)
+main_frame.pack(fill='both', expand=True)
+
+left_frame = Frame(main_frame, bg='#333333')
+left_frame.pack(side='left', fill='y', padx=20)
+
+right_frame = Frame(main_frame, bg='#333333')
+right_frame.pack(side='right', fill='both', expand=True, padx=20)
+
+drop_area = Canvas(right_frame, width=400, height=300, bg='#444444', relief='ridge', bd=2)
+drop_area.pack(pady=20)
+drop_area.create_text(200, 150, text="Drop files here", fill="white", font=('Arial', 18))
+
+button = Button(right_frame, text="Choose an image", command=select_image, font=('Arial', 14), bg='#555555', fg='white', relief='raised', bd=2)
 button.pack()
 
-result_label = Label(app, text="OCR Result:")
-result_label.pack()
+result_label = Label(right_frame, text="OCR Result:", font=('Arial', 16), bg='#333333', fg='white')
+result_label.pack(pady=20)
 
-panel = Label(app)
+panel = Label(right_frame, bg='#333333')
 panel.pack()
 
 app.mainloop()
